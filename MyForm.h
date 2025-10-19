@@ -34,7 +34,8 @@ namespace Project13 {
         literal int FERRY_LEFT_X = 460;                    // подберите под свой фон
         literal int FERRY_LEFT_Y = 500 - FERRY_H / 2;     // подберите под свой фон
 
-        literal int FERRY_RIGHT_X = 580;  // Примерная координата, подбери под свой фон (обозначает левый угол парома для правого берега)
+        literal int FERRY_RIGHT_X = 580;  // Примерная координата, подбери под свой фон (обозначает координату X парома для правого берега)
+        literal int FERRY_RIGHT_Y = 140;  // Примерная координата, подбери под свой фон (обозначает координату Y парома для правого берега)
 
         // ===================== ПРАВЬТЕ ТУТ: НАСТРОЙКИ ОЧЕРЕДЕЙ =====================
         // Точки очередей у шлагбаумов (куда машины выстраиваются)
@@ -66,6 +67,7 @@ namespace Project13 {
         // Добавляем поля для движения парома
         Timer^ paromMovementTimer;
         int paromTargetX;
+        int paromTargetY;
         int paromStep;
     private: System::Windows::Forms::Label^ CounterLabel;
     private: System::Windows::Forms::TrackBar^ trackBar1;
@@ -296,7 +298,8 @@ namespace Project13 {
 
         void StartParomMovement()
         {
-            if (paromMovementTimer != nullptr) {
+            if (paromMovementTimer != nullptr)
+            {
                 paromMovementTimer->Stop();
                 paromMovementTimer = nullptr;
             }
@@ -305,6 +308,7 @@ namespace Project13 {
             paromMovementTimer->Interval = 30; // Быстрее для тестирования
             paromStep = 15;
             paromTargetX = parom->isLeftSide ? FERRY_RIGHT_X : FERRY_LEFT_X;
+            paromTargetY = parom->isLeftSide ? FERRY_RIGHT_Y : FERRY_LEFT_Y;
 
             Console::WriteLine("Начинаем движение парома от {0} к {1}",
                 parom->Sprite->Left, paromTargetX);
@@ -316,22 +320,36 @@ namespace Project13 {
         void OnParomMovementTick(Object^ sender, EventArgs^ e)
         {
             int currentX = parom->Sprite->Left;
-            int direction = (paromTargetX > currentX) ? 1 : -1;
-            int newX = currentX + paromStep * direction;
+            int currentY = parom->Sprite->Top;
+
+            int dirX = (paromTargetX > currentX) ? 1 : -1;
+            int dirY = (paromTargetY > currentY) ? 1 : -1;
+
+            int newX = currentX + paromStep * dirX;
+            int newY = currentY + paromStep * dirY;
 
             // Проверяем, не перескочили ли цель
-            if ((direction > 0 && newX >= paromTargetX) ||
-                (direction < 0 && newX <= paromTargetX)) {
-                newX = paromTargetX;
-            }
+            if ((dirX > 0 && newX >= paromTargetX) || (dirX < 0 && newX <= paromTargetX)) newX = paromTargetX;
+            if ((dirY > 0 && newY >= paromTargetY) || (dirY < 0 && newY <= paromTargetY)) newY = paromTargetY;
 
-            parom->Sprite->Left = newX;
+            double dx = paromTargetX - currentX;
+            double dy = paromTargetY - currentY;
+            double dist = Math::Sqrt(dx * dx + dy * dy);
+
+            if (dist < paromStep) {
+                parom->Sprite->Left = paromTargetX;
+                parom->Sprite->Top = paromTargetY;
+            }
+            else {
+                parom->Sprite->Left = currentX + (int)(paromStep * dx / dist);
+                parom->Sprite->Top = currentY + (int)(paromStep * dy / dist);
+            }
 
             // Отладочный вывод
             Console::WriteLine("Паром движется: {0} -> {1} (цель: {2})",
                 currentX, newX, paromTargetX);
 
-            if (newX == paromTargetX) {
+            if (newX == paromTargetX && newY == paromTargetY) {
                 // Достигли цели
                 paromMovementTimer->Stop();
                 parom->isLeftSide = !parom->isLeftSide;
@@ -631,5 +649,4 @@ namespace Project13 {
         AddTruckRight(sender, e);
     }
     };
-
-} // namespace Project13
+}
