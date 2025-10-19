@@ -17,33 +17,33 @@ namespace Project13 {
     private:
         // ===================== ПРАВЬТЕ ТУТ: НАСТРОЙКИ СЦЕНЫ =====================
         // Стартовые точки спавна (из "углов" дорог)
-        literal int LEFT_SPAWN_X_START = 80;     // левый край для машин слева
-        literal int LEFT_SPAWN_Y = 1070;   // линия Y (нижняя дорога)
-        literal int RIGHT_SPAWN_X_START = 2490;   // правый край для машин справа
-        literal int RIGHT_SPAWN_Y = 320;    // линия Y (верхняя дорога)
+        literal int LEFT_SPAWN_X_START = 0;     // левый край для машин слева
+        literal int LEFT_SPAWN_Y = 470;   // линия Y (нижняя дорога)
+        literal int RIGHT_SPAWN_X_START = 1200;   // правый край для машин справа
+        literal int RIGHT_SPAWN_Y = 150;    // линия Y (верхняя дорога)
 
         // Размеры машин
-        literal int PASS_W = 120;
-        literal int PASS_H = 60;
-        literal int TRUCK_W = 240;
-        literal int TRUCK_H = 60;
+        literal int PASS_W = 80;
+        literal int PASS_H = 40;
+        literal int TRUCK_W = 200;
+        literal int TRUCK_H = 40;
 
         // Паром (старт у левого берега)
-        literal int FERRY_W = 300;
-        literal int FERRY_H = 100;
-        literal int FERRY_LEFT_X = 936;                    // подберите под свой фон
-        literal int FERRY_LEFT_Y = 1012 - FERRY_H / 2;     // подберите под свой фон
+        literal int FERRY_W = 225;
+        literal int FERRY_H = 80;
+        literal int FERRY_LEFT_X = 460;                    // подберите под свой фон
+        literal int FERRY_LEFT_Y = 500 - FERRY_H / 2;     // подберите под свой фон
 
-        literal int FERRY_RIGHT_X = 1800;  // Примерная координата, подбери под свой фон
+        literal int FERRY_RIGHT_X = 580;  // Примерная координата, подбери под свой фон (обозначает левый угол парома для правого берега)
 
         // ===================== ПРАВЬТЕ ТУТ: НАСТРОЙКИ ОЧЕРЕДЕЙ =====================
         // Точки очередей у шлагбаумов (куда машины выстраиваются)
         // Обычно это "перед трапом" у каждого берега.
-        literal int LEFT_QUEUE_X = FERRY_LEFT_X - 260;        // точка у левого трапа
+        literal int LEFT_QUEUE_X = FERRY_LEFT_X - 120;        // точка у левого трапа
         literal int LEFT_QUEUE_Y = LEFT_SPAWN_Y;             // по Y остаёмся на дороге
 
         // Правый берег — поставьте реальные координаты своего правого причала!
-        literal int RIGHT_QUEUE_X = FERRY_LEFT_X + FERRY_W + 650; // временно "примерно справа"
+        literal int RIGHT_QUEUE_X = FERRY_LEFT_X + 470; // временно "примерно справа"
         literal int RIGHT_QUEUE_Y = RIGHT_SPAWN_Y;
 
         // Дистанция между машинами в очереди (в пикселях)
@@ -88,15 +88,13 @@ namespace Project13 {
         }
 
         // Перегрузка №1: удобная (без рамки по умолчанию)
-        void SetSpriteImage(PictureBox^ pb, System::String^ file, bool faceRight,
-            int w, int h, Color fallbackColor)
+        void SetSpriteImage(PictureBox^ pb, System::String^ file, bool faceRight, int w, int h, Color fallbackColor)
         {
             SetSpriteImage(pb, file, faceRight, w, h, fallbackColor, false);
         }
 
         // Перегрузка №2: полная (с явным addBorder)
-        void SetSpriteImage(PictureBox^ pb, System::String^ file, bool faceRight,
-            int w, int h, Color fallbackColor, bool addBorder)
+        void SetSpriteImage(PictureBox^ pb, System::String^ file, bool faceRight, int w, int h, Color fallbackColor, bool addBorder)
         {
             auto p = SpritePath(file);
             if (p != nullptr) {
