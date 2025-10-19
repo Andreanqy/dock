@@ -124,8 +124,21 @@ public:
 
         // Требование: начинать загрузку только когда есть минимум 2 машины в очереди,
         // если паром сейчас пуст (usedSlots == 0)
-        if (usedSlots == 0 && loadingQueue != nullptr && loadingQueue->Count < 2)
-            return;
+        //if (usedSlots == 0 && loadingQueue != nullptr && loadingQueue->Count < 2)
+        //    return;
+
+        // Разрешаем старт с одной машины, если очередь пуста, или если в ней грузовик
+        /*
+        if (usedSlots == 0 && loadingQueue != nullptr) {
+            bool hasTruck = false;
+            for each (Car ^ c in loadingQueue)
+                if (dynamic_cast<Truck^>(c) != nullptr)
+                    hasTruck = true;
+
+            if (!hasTruck && loadingQueue->Count < 2)
+                return;
+        }
+        */
 
         if (currentLoadingIndex >= loadingQueue->Count || IsFull) {
             CheckLoadingCompletion();
@@ -158,6 +171,30 @@ public:
     // Проверка условий завершения загрузки
     void CheckLoadingCompletion()
     {
+        // Если палуба полная — можно отплывать
+        if (IsFull)
+        {
+            Console::WriteLine("Паром полностью загружен, отплываем!");
+            State = ParomState::MovingToDest;
+            OnParomStateChanged(this);
+            return;
+        }
+
+        // Если очередь пустая — просто ждём
+        if (loadingQueue == nullptr || loadingQueue->Count == 0)
+        {
+            Console::WriteLine("Очередь пуста, ждем пополнения.");
+            return;
+        }
+
+        // Если очередь есть, продолжаем загружать
+        if (currentMovingCar == nullptr)
+        {
+            currentLoadingIndex = 0; // берём следующую
+            OnLoadingTick(nullptr, nullptr);
+        }
+
+        /*
         bool shouldFinish = false;
 
         if (IsFull) {
@@ -171,6 +208,7 @@ public:
             loadingTimer->Stop();
             FinishLoading();
         }
+        */
     }
 
     // Завершение загрузки

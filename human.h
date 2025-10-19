@@ -94,8 +94,26 @@ public:
 
         // ѕ–ќ¬≈–я≈ћ ƒќ≈’јЋј Ћ» ѕ≈–¬јя ћјЎ»Ќј ƒќ ЎЋј√Ѕј”ћј
         Car^ firstCar = cars[0];
-        bool firstCarAtGate = (Math::Abs(firstCar->Sprite->Left - queueX) <= 10) &&
-            (Math::Abs(firstCar->Sprite->Top - queueY) <= 10);
+        int carFrontX;
+
+        // если машины сто€т слева и движутс€ вправо Ч "перед" у машины справа
+        if (role == "SecurityGuard" && name == "ќхранник") {
+            // определ€ем по Y Ч нижн€€ дорога (слева)
+            bool isLeftQueue = (queueY > 300); // подстрой под реальную ось
+            if (isLeftQueue)
+                carFrontX = firstCar->Sprite->Left + firstCar->Sprite->Width; // перед справа
+            else
+                carFrontX = firstCar->Sprite->Left; // перед слева
+        }
+        else {
+            carFrontX = firstCar->Sprite->Left + firstCar->Sprite->Width; // fallback
+        }
+
+        bool firstCarAtGate = (Math::Abs(carFrontX - queueX) <= 20) &&
+            (Math::Abs(firstCar->Sprite->Top - queueY) <= 15);
+
+        //bool firstCarAtGate = (Math::Abs(firstCar->Sprite->Left - queueX) <= 10) &&
+        //    (Math::Abs(firstCar->Sprite->Top - queueY) <= 10);
 
         if (firstCarAtGate && !queueDetected) {
             queueDetected = true;

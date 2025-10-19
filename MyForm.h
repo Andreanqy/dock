@@ -19,7 +19,7 @@ namespace Project13 {
         // Стартовые точки спавна (из "углов" дорог)
         literal int LEFT_SPAWN_X_START = 0;     // левый край для машин слева
         literal int LEFT_SPAWN_Y = 470;   // линия Y (нижняя дорога)
-        literal int RIGHT_SPAWN_X_START = 1200;   // правый край для машин справа
+        literal int RIGHT_SPAWN_X_START = 1300;   // правый край для машин справа
         literal int RIGHT_SPAWN_Y = 150;    // линия Y (верхняя дорога)
 
         // Размеры машин
