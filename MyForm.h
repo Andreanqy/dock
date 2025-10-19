@@ -31,8 +31,8 @@ namespace Project13 {
         // Паром (старт у левого берега)
         literal int FERRY_W = 300;
         literal int FERRY_H = 100;
-        literal int FERRY_LEFT_X = 0;                    // 936 подберите под свой фон
-        literal int FERRY_LEFT_Y = 0;     // 1012 - FERRY_H / 2 подберите под свой фон
+        literal int FERRY_LEFT_X = 936;                    // подберите под свой фон
+        literal int FERRY_LEFT_Y = 1012 - FERRY_H / 2;     // подберите под свой фон
 
         literal int FERRY_RIGHT_X = 1800;  // Примерная координата, подбери под свой фон
 
