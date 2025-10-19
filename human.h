@@ -19,8 +19,7 @@ protected:
     String^ role;
 
 public:
-    Human(String^ name, String^ role, String^ imagePath)
-        : name(name), role(role)
+    Human(String^ name, String^ role, String^ imagePath) : name(name), role(role)
     {
         sprite = gcnew PictureBox();
         sprite->SizeMode = PictureBoxSizeMode::AutoSize;

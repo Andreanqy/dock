@@ -134,7 +134,7 @@ public:
 
         Car^ currentCar = loadingQueue[currentLoadingIndex];
 
-        // Запускаем АН�?МАЦ�?Ю въезда (без мгновенного добавления на борт)
+        // Запускаем анимацию въезда (без мгновенного добавления на борт)
         StartCarLoadingAnimation(currentCar);
 
         // Удаляем из очереди — теперь эта машина считается в процессе загрузки
@@ -254,15 +254,15 @@ public:
         car->Sprite->SendToBack();
 
         // Рассчитываем следующую позицию внутри парома
-        int offsetX = 10;
-        for each (Control ^ c in onboard)
-            offsetX += c->Width + 5;
+        //int offsetX = 10;
+        //for each (Control ^ c in onboard)
+        //    offsetX += c->Width + 5;
 
         int offsetY = sprite->Height / 2 - car->Sprite->Height / 2;
 
         // ВАЖНО: цель движения — В М�?РОВЫХ координатах
         targetPositionOnFerry = Point(
-            sprite->Left + offsetX,
+            sprite->Left + 10, // + offsetX
             sprite->Top + offsetY
         );
 

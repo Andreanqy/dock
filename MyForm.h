@@ -31,7 +31,7 @@ namespace Project13 {
         // Паром (старт у левого берега)
         literal int FERRY_W = 225;
         literal int FERRY_H = 80;
-        literal int FERRY_LEFT_X = 460;                    // подберите под свой фон
+        literal int FERRY_LEFT_X = 460;     // подберите под свой фон (заменял координату с левого угла на середину парома: 570 - FERRY_W / 2)
         literal int FERRY_LEFT_Y = 500 - FERRY_H / 2;     // подберите под свой фон
 
         literal int FERRY_RIGHT_X = 580;  // Примерная координата, подбери под свой фон (обозначает координату X парома для правого берега)
@@ -460,13 +460,13 @@ namespace Project13 {
             guardRight = gcnew SecurityGuard(SpritePath("guard.png"));
 
             // Пример: ваши текущие координаты
-            guardLeft->Sprite->Left = 740;   guardLeft->Sprite->Top = LEFT_SPAWN_Y - (-35); // -(-35) == +35
-            guardRight->Sprite->Left = 1790;  guardRight->Sprite->Top = RIGHT_SPAWN_Y - 75;
+            guardLeft->Sprite->Left = 365;   guardLeft->Sprite->Top = 551;
+            guardRight->Sprite->Left = 884;  guardRight->Sprite->Top = 118;
 
             guardLeft->Sprite->SizeMode = PictureBoxSizeMode::StretchImage;
             guardRight->Sprite->SizeMode = PictureBoxSizeMode::StretchImage;
-            guardLeft->Sprite->Width = 32;   guardLeft->Sprite->Height = 32;   // ПРАВЬТЕ
-            guardRight->Sprite->Width = 32;  guardRight->Sprite->Height = 32;  // ПРАВЬТЕ
+            guardLeft->Sprite->Width = 16;   guardLeft->Sprite->Height = 16;   // ПРАВЬТЕ
+            guardRight->Sprite->Width = 16;  guardRight->Sprite->Height = 16;  // ПРАВЬТЕ
 
             this->groupBox1->Controls->Add(guardLeft->Sprite);
             this->groupBox1->Controls->Add(guardRight->Sprite);
