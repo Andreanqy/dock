@@ -12,8 +12,7 @@ protected:
     int slots;            // "вес" машины во вместимости парома (легк.=1, груз.=2)
 
 public:
-    Car(int speedPxPerTick, int capacitySlots)
-        : speed(speedPxPerTick), slots(capacitySlots)
+    Car(int speedPxPerTick, int capacitySlots) : speed(speedPxPerTick), slots(capacitySlots)
     {
         if (speed <= 0) speed = 1;  // защита от нулевой скорости
         sprite = gcnew PictureBox();
@@ -65,28 +64,28 @@ public:
 public ref class Passcar : public Car
 {
 public:
-    Passcar() : Car(6, 1)   // скорость легковой по умолчанию
+    Passcar() : Car(15, 1)   // скорость легковой по умолчанию
     {
         // размеры/картинка задаём в MyForm через SetSpriteImage(...)
-        sprite->Width = 50;
-        sprite->Height = 24;
+        sprite->Width = 80;
+        sprite->Height = 40;
     }
 };
 
 public ref class Truck : public Car
 {
 public:
-    Truck() : Car(6, 2)     // было 4 → ехал медленнее; теперь быстрее
+    Truck() : Car(10, 2)     // было 4 → ехал медленнее; теперь быстрее
     {
-        sprite->Width = 80;
-        sprite->Height = 32;
+        sprite->Width = 200;
+        sprite->Height = 40;
     }
 
     bool MoveToX(int targetX) override {
         int originalSpeed = speed;
-        speed = 3; // грузовики медленнее
+        // speed = 3; // грузовики медленнее
         bool result = Car::MoveToX(targetX);
-        speed = originalSpeed;
+        // speed = originalSpeed;
         return result;
     }
 };

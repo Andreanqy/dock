@@ -33,18 +33,8 @@ public:
     property String^ Name{ String ^ get() { return name; } }
     property String^ Role{ String ^ get() { return role; } }
 
-        // В C++/CLI для ref-классов нельзя задавать default аргумент.
-        // Делаем две перегрузки.
-    void SmoothMoveTo(Point target);                 // перегрузка с "дефолтной" скоростью
     void SmoothMoveTo(Point target, int moveSpeed);  // основная
 };
-
-// Реализации
-inline void Human::SmoothMoveTo(Point target)
-{
-    // "дефолтная" скорость = 5
-    SmoothMoveTo(target, 5);
-}
 
 inline void Human::SmoothMoveTo(Point target, int moveSpeed)
 {
@@ -56,7 +46,6 @@ inline void Human::SmoothMoveTo(Point target, int moveSpeed)
 }
 
 // ===== Охранник =====
-
 public ref class SecurityGuard : public Human
 {
 private:
@@ -71,21 +60,25 @@ public:
     event EventHandler^ OnQueueReady;
     event EventHandler^ OnQueueEmpty;
 
-    SecurityGuard(String^ imagePath)
-        : Human("Охранник", "SecurityGuard", imagePath),
-        guardTimer(gcnew Timer()),
-        queueDetected(false)
+    SecurityGuard(String^ imagePath) : Human("Охранник", "SecurityGuard", imagePath), guardTimer(gcnew Timer()), queueDetected(false)
     {
         guardTimer->Interval = 500;
         guardTimer->Tick += gcnew EventHandler(this, &SecurityGuard::OnGuardTick);
         guardTimer->Start();
     }
 
+    void OnGuardTick(Object^ sender, EventArgs^ e) {}
+
     // Метод для проверки очереди
-    void CheckQueue(List<Car^>^ cars, int queueX, int queueY)
+    // если пустая - генерируем событие OnQueueEmpty;
+    // если машина не у шлагбаума, но загрузка запущена - генерируем событие OnQueueEmpty;
+    // если машина у шлагбаума, но загрузка не запущена - генерируем событие OnQueueReady;
+    void CheckQueue(List<Car^>^ cars, int queueX, int queueY, bool isLeftSide)
     {
-        if (cars == nullptr || cars->Count == 0) {
-            if (queueDetected) {
+        if (cars == nullptr || cars->Count == 0)
+        {
+            if (queueDetected)
+            {
                 queueDetected = false;
                 OnQueueEmpty(this, EventArgs::Empty);
             }
@@ -106,16 +99,15 @@ public:
                 carFrontX = firstCar->Sprite->Left; // перед слева
         }
         else {
-            carFrontX = firstCar->Sprite->Left + firstCar->Sprite->Width; // fallback
+            throw "Работает не охранник!";
+            //carFrontX = firstCar->Sprite->Left + firstCar->Sprite->Width; // fallback
         }
 
-        bool firstCarAtGate = (Math::Abs(carFrontX - queueX) <= 20) &&
-            (Math::Abs(firstCar->Sprite->Top - queueY) <= 15);
+        bool firstCarAtGate = (Math::Abs(carFrontX - queueX) <= 20) && (Math::Abs(firstCar->Sprite->Top - queueY) <= 15);
 
-        //bool firstCarAtGate = (Math::Abs(firstCar->Sprite->Left - queueX) <= 10) &&
-        //    (Math::Abs(firstCar->Sprite->Top - queueY) <= 10);
+        // bool firstCarAtGate = (Math::Abs(firstCar->Sprite->Left - queueX) <= 10) && (Math::Abs(firstCar->Sprite->Top - queueY) <= 10);
 
-        if (firstCarAtGate && !queueDetected) {
+        if (firstCarAtGate && !queueDetected && ((queueX < 600 && isLeftSide) || (queueX > 600 && !isLeftSide))) {
             queueDetected = true;
             OnQueueReady(this, EventArgs::Empty);
         }
@@ -123,12 +115,5 @@ public:
             queueDetected = false;
             OnQueueEmpty(this, EventArgs::Empty);
         }
-    }
-
-    void OnGuardTick(Object^ sender, EventArgs^ e) {}
-
-    void TriggerLoadAllowed()
-    {
-        OnLoadAllowed();
     }
 };

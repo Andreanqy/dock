@@ -15,12 +15,12 @@ namespace Project13 {
     public ref class MyForm : public System::Windows::Forms::Form
     {
     private:
-        // ===================== ПРАВЬТЕ ТУТ: НАСТРОЙКИ СЦЕНЫ =====================
+        // ===================== НАСТРОЙКИ СЦЕНЫ =====================
         // Стартовые точки спавна (из "углов" дорог)
-        literal int LEFT_SPAWN_X_START = 0;     // левый край для машин слева
-        literal int LEFT_SPAWN_Y = 470;   // линия Y (нижняя дорога)
-        literal int RIGHT_SPAWN_X_START = 1300;   // правый край для машин справа
-        literal int RIGHT_SPAWN_Y = 150;    // линия Y (верхняя дорога)
+        literal int LEFT_SPAWN_X_START = 0;
+        literal int LEFT_SPAWN_Y = 470;
+        literal int RIGHT_SPAWN_X_START = 1300;
+        literal int RIGHT_SPAWN_Y = 150;
 
         // Размеры машин
         literal int PASS_W = 80;
@@ -31,19 +31,18 @@ namespace Project13 {
         // Паром (старт у левого берега)
         literal int FERRY_W = 225;
         literal int FERRY_H = 80;
-        literal int FERRY_LEFT_X = 460;     // подберите под свой фон (заменял координату с левого угла на середину парома: 570 - FERRY_W / 2)
-        literal int FERRY_LEFT_Y = 500 - FERRY_H / 2;     // подберите под свой фон
+        literal int FERRY_LEFT_X = 460;
+        literal int FERRY_LEFT_Y = 500 - FERRY_H / 2;
 
         literal int FERRY_RIGHT_X = 580;  // Примерная координата, подбери под свой фон (обозначает координату X парома для правого берега)
         literal int FERRY_RIGHT_Y = 140;  // Примерная координата, подбери под свой фон (обозначает координату Y парома для правого берега)
 
-        // ===================== ПРАВЬТЕ ТУТ: НАСТРОЙКИ ОЧЕРЕДЕЙ =====================
+        // ===================== НАСТРОЙКИ ОЧЕРЕДЕЙ =====================
         // Точки очередей у шлагбаумов (куда машины выстраиваются)
-        // Обычно это "перед трапом" у каждого берега.
         literal int LEFT_QUEUE_X = FERRY_LEFT_X - 120;        // точка у левого трапа
         literal int LEFT_QUEUE_Y = LEFT_SPAWN_Y;             // по Y остаёмся на дороге
 
-        // Правый берег — поставьте реальные координаты своего правого причала!
+        // Правый берег
         literal int RIGHT_QUEUE_X = FERRY_LEFT_X + 470; // временно "примерно справа"
         literal int RIGHT_QUEUE_Y = RIGHT_SPAWN_Y;
 
@@ -60,7 +59,6 @@ namespace Project13 {
         SecurityGuard^ guardRight;
 
         PictureBox^ paromSprite;
-        CarsParom^ parom;
 
         Timer^ checkParomTimer; // тиканьё «мира»
 
@@ -69,8 +67,10 @@ namespace Project13 {
         int paromTargetX;
         int paromTargetY;
         int paromStep;
+    public: static CarsParom^ parom;
     private: System::Windows::Forms::Label^ CounterLabel;
     private: System::Windows::Forms::TrackBar^ trackBar1;
+    private: System::Windows::Forms::Button^ button1;
 
         System::Random^ rng;
 
@@ -89,29 +89,19 @@ namespace Project13 {
             return nullptr;
         }
 
-        // Перегрузка №1: удобная (без рамки по умолчанию)
+        // Устанавливаем изображение
         void SetSpriteImage(PictureBox^ pb, System::String^ file, bool faceRight, int w, int h, Color fallbackColor)
         {
-            SetSpriteImage(pb, file, faceRight, w, h, fallbackColor, false);
-        }
-
-        // Перегрузка №2: полная (с явным addBorder)
-        void SetSpriteImage(PictureBox^ pb, System::String^ file, bool faceRight, int w, int h, Color fallbackColor, bool addBorder)
-        {
             auto p = SpritePath(file);
-            if (p != nullptr) {
+            if (p != nullptr)
+            {
                 auto img = Image::FromFile(p);
                 if (faceRight) img->RotateFlip(RotateFlipType::RotateNoneFlipX);
                 pb->Image = img;
                 pb->BackColor = Color::Transparent;
                 pb->SizeMode = PictureBoxSizeMode::StretchImage;
             }
-            else {
-                pb->Image = nullptr;
-                pb->BackColor = fallbackColor; // фолбэк если файла нет
-                pb->SizeMode = PictureBoxSizeMode::StretchImage;
-            }
-            pb->BorderStyle = addBorder ? BorderStyle::FixedSingle : BorderStyle::None;
+            else throw String::Format("Файл {file} не найден!");
             pb->Width = w; pb->Height = h;
         }
 
@@ -119,7 +109,7 @@ namespace Project13 {
         void AddPassLeft(Object^, EventArgs^) {
             auto car = gcnew Passcar();
             System::String^ file = (rng->Next(2) == 0) ? "GreenCar.png" : "RedCar.png";
-            SetSpriteImage(car->Sprite, file, /*faceRight=*/true, PASS_W, PASS_H, Color::Yellow);
+            SetSpriteImage(car->Sprite, file, true, PASS_W, PASS_H, Color::Yellow);
 
             // спавним из "левого угла"
             car->Sprite->Left = LEFT_SPAWN_X_START - car->Sprite->Width;
@@ -132,7 +122,7 @@ namespace Project13 {
 
         void AddTruckLeft(Object^, EventArgs^) {
             auto car = gcnew Truck();
-            SetSpriteImage(car->Sprite, "Truck.png", /*faceRight=*/true, TRUCK_W, TRUCK_H, Color::Orange);
+            SetSpriteImage(car->Sprite, "Truck.png", true, TRUCK_W, TRUCK_H, Color::Orange);
 
             car->Sprite->Left = LEFT_SPAWN_X_START - car->Sprite->Width;
             car->Sprite->Top = LEFT_SPAWN_Y - car->Sprite->Height / 2;
@@ -145,7 +135,7 @@ namespace Project13 {
         void AddPassRight(Object^, EventArgs^) {
             auto car = gcnew Passcar();
             System::String^ file = (rng->Next(2) == 0) ? "GreenCar.png" : "RedCar.png";
-            SetSpriteImage(car->Sprite, file, /*faceRight=*/false, PASS_W, PASS_H, Color::Yellow);
+            SetSpriteImage(car->Sprite, file, false, PASS_W, PASS_H, Color::Yellow);
 
             // спавним из "правого угла"
             car->Sprite->Left = RIGHT_SPAWN_X_START;
@@ -169,17 +159,20 @@ namespace Project13 {
         }
 
         // ------------------ Тик мира: движение колонн к шлагбаумам ------------------
+
         void OnCheckParom(System::Object^, System::EventArgs^)
         {
             // Левый берег: головная встаёт у трапа, остальные — с зазором за ней
-            if (leftCars->Count > 0) {
+            if (leftCars->Count > 0)
+            {
                 // головная
                 int headTargetX = LEFT_QUEUE_X - leftCars[0]->Sprite->Width;
                 leftCars[0]->MoveToY(LEFT_QUEUE_Y - leftCars[0]->Sprite->Height / 2);
                 leftCars[0]->MoveToX(headTargetX);
 
                 // хвост колонны
-                for (int i = 1; i < leftCars->Count; ++i) {
+                for (int i = 1; i < leftCars->Count; ++i)
+                {
                     auto prev = leftCars[i - 1]->Sprite;
                     int tx = prev->Left - leftCars[i]->Sprite->Width - QUEUE_GAP;
                     leftCars[i]->MoveToY(LEFT_QUEUE_Y - leftCars[i]->Sprite->Height / 2);
@@ -222,28 +215,18 @@ namespace Project13 {
         void CheckQueues()
         {
             // Передаём координаты очередей
-            guardLeft->CheckQueue(leftCars, LEFT_QUEUE_X - PASS_W, LEFT_QUEUE_Y - PASS_H / 2);
-            guardRight->CheckQueue(rightCars, RIGHT_QUEUE_X, RIGHT_QUEUE_Y - PASS_H / 2);
+            guardLeft->CheckQueue(leftCars, LEFT_QUEUE_X, LEFT_QUEUE_Y - PASS_H / 2, parom->isLeftSide);
+            guardRight->CheckQueue(rightCars, RIGHT_QUEUE_X, RIGHT_QUEUE_Y - PASS_H / 2, parom->isLeftSide);
         }
 
         void OnLeftQueueReady(Object^ sender, EventArgs^ e)
         {
-
-            if (parom->CanLoadFromShore(true)) {
-                parom->StartAsyncLoading(leftCars);
-            }
-            else {
-            }
+            if (parom->CanLoadFromShore(true) && parom->isLeftSide) parom->StartAsyncLoading(leftCars);
         }
 
         void OnRightQueueReady(Object^ sender, EventArgs^ e)
         {
-
-            if (parom->CanLoadFromShore(false)) {
-                parom->StartAsyncLoading(rightCars);
-            }
-            else {
-            }
+            if (parom->CanLoadFromShore(false) && !parom->isLeftSide) parom->StartAsyncLoading(rightCars);
         }
 
         void OnLeftQueueEmpty(Object^ sender, EventArgs^ e)
@@ -350,18 +333,16 @@ namespace Project13 {
                 currentX, newX, paromTargetX);
 
             if (newX == paromTargetX && newY == paromTargetY) {
-                // Достигли цели
                 paromMovementTimer->Stop();
-                parom->isLeftSide = !parom->isLeftSide;
-
-                Console::WriteLine("Паром прибыл на {0} берег",
-                    parom->isLeftSide ? "левый" : "правый");
 
                 // НАЧИНАЕМ ВЫГРУЗКУ
                 parom->StartUnloading();
-                UnloadCars();
+                UnloadCars();          // выгружаем машины на текущий берег
                 parom->FinishUnloading();
+
+                parom->isLeftSide = !parom->isLeftSide; // инверсия стороны после выгрузки
             }
+
         }
 
         void UnloadCars()
@@ -369,28 +350,47 @@ namespace Project13 {
             // Получаем список машин на пароме
             List<Control^>^ onboardCars = parom->Onboard();
 
-            for each(Control ^ carSprite in onboardCars) {
-                // Возвращаем машину на форму
+            // Вспомогательный список для новых машин в очереди
+            List<Car^>^ targetList = parom->isLeftSide ? rightCars : leftCars;
+            int queueY = parom->isLeftSide ? RIGHT_QUEUE_Y : LEFT_QUEUE_Y;
+            int startX = parom->isLeftSide ? FERRY_LEFT_X + FERRY_W + 50 : FERRY_RIGHT_X - 50;
+
+            for each (Control ^ carSprite in onboardCars)
+            {
+                // Перемещаем спрайт на форму
                 carSprite->Parent = this->groupBox1;
 
-                if (parom->isLeftSide) {
-                    // Выгружаем на левом берегу
-                    carSprite->Left = FERRY_LEFT_X + FERRY_W + 50;
-                    carSprite->Top = LEFT_SPAWN_Y - carSprite->Height / 2;
-                    // ДОБАВЛЯЕМ В ПРАВУЮ ОЧЕРЕДЬ чтобы уехали вправо
-                    // Нужно создать Car объект или найти способ связать Control с Car
+                // Позиционируем спрайт на берегу
+                carSprite->Top = queueY - carSprite->Height / 2;
+
+                if (parom->isLeftSide)
+                    carSprite->Left = startX;   // левый берег — машины поехали вправо
+                else
+                    carSprite->Left = startX;   // правый берег — машины поехали влево
+
+                // Находим объект Car, которому принадлежит этот спрайт
+                Car^ foundCar = nullptr;
+                for each (Car ^ c in leftCars)
+                {
+                    if (c->Sprite == carSprite) { foundCar = c; leftCars->Remove(c); break; }
                 }
-                else {
-                    // Выгружаем на правом берегу  
-                    carSprite->Left = FERRY_RIGHT_X - carSprite->Width - 50;
-                    carSprite->Top = RIGHT_SPAWN_Y - carSprite->Height / 2;
-                    // ДОБАВЛЯЕМ В ЛЕВУЮ ОЧЕРЕДЬ чтобы уехали влево
+                if (!foundCar)
+                {
+                    for each (Car ^ c in rightCars)
+                    {
+                        if (c->Sprite == carSprite) { foundCar = c; rightCars->Remove(c); break; }
+                    }
                 }
+
+                // Если нашли объект Car, добавляем его в очередь нового берега
+                if (foundCar)
+                    targetList->Add(foundCar);
             }
 
             // Очищаем паром
             onboardCars->Clear();
         }
+
 
         Void OnCarLoadingProgress(System::Object^ sender, System::EventArgs^ e)
         {
@@ -479,7 +479,7 @@ namespace Project13 {
 
             // Таймер «мира» — для плавного движения лучше 16..33 мс
             checkParomTimer = gcnew Timer();
-            checkParomTimer->Interval = 30; // было 600 — оставляло машины «стоять»
+            checkParomTimer->Interval = 30;
             checkParomTimer->Tick += gcnew EventHandler(this, &MyForm::OnCheckParom);
             checkParomTimer->Start();
 
@@ -521,6 +521,7 @@ namespace Project13 {
                this->ButtonAddTL = (gcnew System::Windows::Forms::Button());
                this->ButtonAddCR = (gcnew System::Windows::Forms::Button());
                this->ButtonAddCL = (gcnew System::Windows::Forms::Button());
+               this->button1 = (gcnew System::Windows::Forms::Button());
                this->groupBox1->SuspendLayout();
                (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->trackBar1))->BeginInit();
                this->SuspendLayout();
@@ -532,6 +533,7 @@ namespace Project13 {
                    | System::Windows::Forms::AnchorStyles::Right));
                this->groupBox1->BackgroundImage = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"groupBox1.BackgroundImage")));
                this->groupBox1->BackgroundImageLayout = System::Windows::Forms::ImageLayout::Stretch;
+               this->groupBox1->Controls->Add(this->button1);
                this->groupBox1->Controls->Add(this->CounterLabel);
                this->groupBox1->Controls->Add(this->trackBar1);
                this->groupBox1->Controls->Add(this->ButtonAddTR);
@@ -610,6 +612,16 @@ namespace Project13 {
                this->ButtonAddCL->UseVisualStyleBackColor = true;
                this->ButtonAddCL->Click += gcnew System::EventHandler(this, &MyForm::ButtonAddCL_Click);
                // 
+               // button1
+               // 
+               this->button1->Location = System::Drawing::Point(486, 21);
+               this->button1->Name = L"button1";
+               this->button1->Size = System::Drawing::Size(75, 23);
+               this->button1->TabIndex = 10;
+               this->button1->Text = L"check";
+               this->button1->UseVisualStyleBackColor = true;
+               this->button1->Click += gcnew System::EventHandler(this, &MyForm::button1_Click);
+               // 
                // MyForm
                // 
                this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
@@ -648,5 +660,9 @@ namespace Project13 {
     private: System::Void ButtonAddTR_Click(System::Object^ sender, System::EventArgs^ e) {
         AddTruckRight(sender, e);
     }
-    };
+    private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e) {
+        auto check = parom;
+        int a = 0;
+    }
+};
 }

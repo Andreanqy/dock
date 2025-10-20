@@ -24,14 +24,12 @@ private:
     // ДЛЯ АСИНХРОННОЙ ЗАГРУЗКИ
     Timer^ loadingTimer;
     List<Car^>^ loadingQueue;
-    int currentLoadingIndex;
-    Timer^ unloadTimer;
+    // Timer^ unloadTimer;
 
     // Для анимации заезда
     Timer^ carMovementTimer;
     Car^ currentMovingCar;
     Point targetPositionOnFerry;
-
 
 public:
     bool isLeftSide;
@@ -42,21 +40,12 @@ public:
     event SimpleEventHandler^ OnLoadingFinished; 
     event SimpleEventHandler^ OnUnloadingFinished;
     event ParomStateEventHandler^ OnParomStateChanged;
+
     // Новое событие для анимации загрузки
     event EventHandler^ OnCarLoadingProgress;
 
 public:
-    Parom(PictureBox^ spriteParom, int capacityInSlots)
-        : sprite(spriteParom),
-        onboard(gcnew List<Control^>()),
-        capacitySlots(capacityInSlots),
-        usedSlots(0),
-        currentState(ParomState::Waiting),
-        visible_(true),
-        isLeftSide(true),
-        loadingQueue(gcnew List<Car^>()),
-        currentLoadingIndex(0),
-        currentMovingCar(nullptr)  // Добавляем инициализацию
+    Parom(PictureBox^ spriteParom, int capacityInSlots) : sprite(spriteParom), onboard(gcnew List<Control^>()), capacitySlots(capacityInSlots), usedSlots(0), currentState(ParomState::Waiting), visible_(true), isLeftSide(true), loadingQueue(gcnew List<Car^>()), currentMovingCar(nullptr)
     {
         if (sprite == nullptr) throw gcnew ArgumentNullException("spriteParom");
         sprite->Visible = true;
@@ -66,7 +55,7 @@ public:
         loadingTimer->Interval = 100; // 100мс между машинами
         loadingTimer->Tick += gcnew EventHandler(this, &Parom::OnLoadingTick);
 
-        // ДОБАВЛЯЕМ ЗДЕСЬ: инициализация таймера анимации машин
+        // Инициализация таймера анимации машин
         carMovementTimer = gcnew Timer();
         carMovementTimer->Interval = 50; // 50мс для плавной анимации
         carMovementTimer->Tick += gcnew EventHandler(this, &Parom::OnCarMovementTick);
@@ -86,19 +75,9 @@ public:
     property bool IsEmpty { bool get() { return usedSlots == 0; } }
     property bool IsFull { bool get() { return usedSlots >= capacitySlots; } }
 
-    void Reset()
-    {
-        currentState = ParomState::Waiting;
-        usedSlots = 0;
-        onboard->Clear();
-        loadingTimer->Stop();
-        loadingQueue->Clear();
-        currentLoadingIndex = 0;
-    }
-
     List<Control^>^ Onboard() { return onboard; }
 
-    // НОВЫЙ МЕТОД: Начать асинхронную загрузку
+    // Начать асинхронную загрузку
     void StartAsyncLoading(List<Car^>^ carsToLoad)
     {
         if (currentState != ParomState::Waiting) {
@@ -107,12 +86,10 @@ public:
 
         currentState = ParomState::Loading;
         loadingQueue = carsToLoad;
-        currentLoadingIndex = 0;
 
         OnLoadingStarted();
         OnParomStateChanged(this);
         loadingTimer->Start();
-
     }
 
     // Обработчик тика загрузки
@@ -140,42 +117,34 @@ public:
         }
         */
 
-        if (currentLoadingIndex >= loadingQueue->Count || IsFull) {
+        if (loadingQueue->Count == 0 || IsFull)
+        {
             CheckLoadingCompletion();
             return;
         }
 
-        Car^ currentCar = loadingQueue[currentLoadingIndex];
+        Car^ currentCar = loadingQueue[0];
 
         // Запускаем анимацию въезда (без мгновенного добавления на борт)
         StartCarLoadingAnimation(currentCar);
 
         // Удаляем из очереди — теперь эта машина считается в процессе загрузки
-        loadingQueue->RemoveAt(currentLoadingIndex);
+        loadingQueue->RemoveAt(0);
 
         // Следующую возьмём после завершения анимации текущей
         CheckLoadingCompletion();
     }
 
-    // Проверка позиции машины для загрузки
-    bool IsCarAtLoadingPosition(Car^ car)
-    {
-        if (car == nullptr || car->Sprite == nullptr) return false;
-
-        // ВРЕМЕННО: используем приблизительные координаты
-        // Позже передадим реальные координаты из MyForm
-        int targetX = isLeftSide ? 700 : 1800; // Примерные координаты
-        return Math::Abs(car->Sprite->Left - targetX) <= 5;
-    }
-
     // Проверка условий завершения загрузки
     void CheckLoadingCompletion()
     {
-        // Если палуба полная — можно отплывать
+        // Если палуба полная — завершаем загрузку и отплываем
         if (IsFull)
         {
             Console::WriteLine("Паром полностью загружен, отплываем!");
             State = ParomState::MovingToDest;
+            loadingQueue->Clear();
+            OnLoadingFinished();
             OnParomStateChanged(this);
             return;
         }
@@ -190,36 +159,9 @@ public:
         // Если очередь есть, продолжаем загружать
         if (currentMovingCar == nullptr)
         {
-            currentLoadingIndex = 0; // берём следующую
+            // берём следующую
             OnLoadingTick(nullptr, nullptr);
         }
-
-        /*
-        bool shouldFinish = false;
-
-        if (IsFull) {
-            shouldFinish = true;
-        }
-        else if (usedSlots >= 2 && (currentLoadingIndex >= loadingQueue->Count || loadingQueue->Count == 0)) {
-            shouldFinish = true;
-        }
-
-        if (shouldFinish) {
-            loadingTimer->Stop();
-            FinishLoading();
-        }
-        */
-    }
-
-    // Завершение загрузки
-    void FinishLoading()
-    {
-        currentState = ParomState::MovingToDest;
-        loadingQueue->Clear();
-        currentLoadingIndex = 0;
-
-        OnLoadingFinished();
-        OnParomStateChanged(this);
     }
 
     // Начать выгрузку
@@ -243,42 +185,7 @@ public:
     // Проверка возможности загрузки с берега
     bool CanLoadFromShore(bool shoreIsLeft)
     {
-        return (currentState == ParomState::Waiting &&
-            isLeftSide == shoreIsLeft &&
-            usedSlots == 0);
-    }
-
-    // Загрузка машины (с анимацией)
-    bool TryLoadCar(Control^ carSprite, int carSlots)
-    {
-        // ВРЕМЕННО: ВСЕГДА загружаем успешно
-
-        onboard->Add(carSprite);
-        usedSlots += carSlots;
-
-        return true;
-    }
-
-    bool TryLoadCar(Control^ carSprite, int carSlots, int spacingPx)
-    {
-        if (carSprite == nullptr) return false;
-        if (carSlots <= 0) carSlots = 1;
-        if (usedSlots + carSlots > capacitySlots) return false;
-
-        // Позиция на пароме для новой машины
-        int offsetX = 10;
-        for each (Control ^ c in onboard)
-            offsetX += c->Width + spacingPx;
-
-        // Устанавливаем позицию на пароме
-        carSprite->Parent = sprite;
-        carSprite->Top = sprite->Height / 2 - carSprite->Height / 2;
-        carSprite->Left = offsetX;
-
-        onboard->Add(carSprite);
-        usedSlots += carSlots;
-
-        return true;
+        return (currentState == ParomState::Waiting && isLeftSide == shoreIsLeft && usedSlots == 0);
     }
 
     void StartCarLoadingAnimation(Car^ car)
@@ -291,18 +198,10 @@ public:
         sprite->BringToFront();
         car->Sprite->SendToBack();
 
-        // Рассчитываем следующую позицию внутри парома
-        //int offsetX = 10;
-        //for each (Control ^ c in onboard)
-        //    offsetX += c->Width + 5;
+        int targetX = (sprite->Left) + (isLeftSide ? 10 : sprite->Width - car->Sprite->Width - 10);
+        int targetY = sprite->Top + sprite->Height / 2 - car->Sprite->Height / 2;
 
-        int offsetY = sprite->Height / 2 - car->Sprite->Height / 2;
-
-        // ВАЖНО: цель движения — В М�?РОВЫХ координатах
-        targetPositionOnFerry = Point(
-            sprite->Left + 10, // + offsetX
-            sprite->Top + offsetY
-        );
+        targetPositionOnFerry = Point(targetX, targetY);
 
         // Запускаем шаговую анимацию въезда
         carMovementTimer->Start();
@@ -321,9 +220,8 @@ public:
 
         if (reachedX && reachedY) {
             // переносим внутрь парома
-            Point local(targetPositionOnFerry.X - sprite->Left,
-                targetPositionOnFerry.Y - sprite->Top);
-            currentMovingCar->Sprite->Parent = sprite;
+            Point local(targetPositionOnFerry.X - sprite->Left, targetPositionOnFerry.Y - sprite->Top);
+            //currentMovingCar->Sprite->Parent = sprite;
             currentMovingCar->Sprite->Location = local;
 
             // машина на палубе не видна (паром визуально без изменений)
@@ -347,7 +245,5 @@ public:
 public ref class CarsParom : public Parom
 {
 public:
-    CarsParom(PictureBox^ spriteParom, int capacityInSlots)
-        : Parom(spriteParom, capacityInSlots) {
-    }
+    CarsParom(PictureBox^ spriteParom, int capacityInSlots) : Parom(spriteParom, capacityInSlots) { }
 };
