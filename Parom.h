@@ -309,7 +309,9 @@ public:
             State = ParomState::Waiting;
             unloadingQueue->Clear();
             isLeftSide = !isLeftSide; // инверсия стороны после выгрузки
+            int a = 0;
             // Вызвать CheckQueues
+            unloadingTimer->Stop();
             return;
         }
 

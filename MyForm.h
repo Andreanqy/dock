@@ -311,6 +311,7 @@ namespace Project13 {
                 //UnloadCars();          // выгружаем машины на текущий берег
                 //parom->FinishUnloading();
                 //parom->isLeftSide = !parom->isLeftSide; // инверсия стороны после выгрузки
+                int a = 0;
             }
 
         }
