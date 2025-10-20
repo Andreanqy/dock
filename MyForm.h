@@ -195,6 +195,8 @@ namespace Project13 {
                     rightCars[i]->MoveToX(tx);
                 }
             }
+            if (!parom->isLeftSide && parom->State == Parom::ParomState::Waiting)
+                int a = 0;
             CheckQueues();
         }
 
@@ -203,12 +205,9 @@ namespace Project13 {
             // Подписка на события охранников
             guardLeft->OnQueueReady += gcnew EventHandler(this, &MyForm::OnLeftQueueReady);
             guardRight->OnQueueReady += gcnew EventHandler(this, &MyForm::OnRightQueueReady);
-            guardLeft->OnQueueEmpty += gcnew EventHandler(this, &MyForm::OnLeftQueueEmpty);
-            guardRight->OnQueueEmpty += gcnew EventHandler(this, &MyForm::OnRightQueueEmpty);
 
             // Подписка на события парома (ТОЛЬКО основные)
             parom->OnParomStateChanged += gcnew ParomStateEventHandler(this, &MyForm::OnParomStateChanged);
-            parom->OnUnloadingFinished += gcnew SimpleEventHandler(this, &MyForm::OnUnloadingFinishedHandler);
             parom->OnCarLoadingProgress += gcnew System::EventHandler(this, &MyForm::OnCarLoadingProgress);
         }
 
@@ -226,23 +225,7 @@ namespace Project13 {
 
         void OnRightQueueReady(Object^ sender, EventArgs^ e)
         {
-            if (parom->CanLoadFromShore(false) && !parom->isLeftSide) parom->StartAsyncLoading(rightCars);
-        }
-
-        void OnLeftQueueEmpty(Object^ sender, EventArgs^ e)
-        {
-            // Если загрузка идёт и очередь закончилась - можно завершать загрузку
-            if (parom->State == Parom::ParomState::Loading && parom->isLeftSide) {
-                // Логика завершения загрузки при пустой очереди
-            }
-        }
-
-        void OnRightQueueEmpty(Object^ sender, EventArgs^ e)
-        {
-            // Аналогично для правого берега
-            if (parom->State == Parom::ParomState::Loading && !parom->isLeftSide) {
-                // Логика завершения загрузки при пустой очереди
-            }
+            if (parom->CanLoadFromShore(false)) parom->StartAsyncLoading(rightCars);
         }
 
         void OnParomStateChanged(Parom^ parom)
@@ -265,20 +248,6 @@ namespace Project13 {
             case Parom::ParomState::Waiting:;
                 break;
             }
-        }
-
-        void OnUnloadingFinishedHandler()
-        {
-            // ВЫГРУЖАЕМ МАШИНЫ
-            UnloadCars();
-
-            // Выгрузка завершена - паром пустой и в состоянии Waiting
-            CounterLabel->Text = String::Format("{0}/{1}", 0, parom->CapacitySlots);
-
-            // Может начать новую загрузку если есть очередь
-            CheckQueues();
-
-            Console::WriteLine("Выгрузка завершена. Паром готов к новой загрузке.");
         }
 
         void StartParomMovement()
@@ -341,69 +310,16 @@ namespace Project13 {
                 parom->StartAsyncUnloading();
                 //UnloadCars();          // выгружаем машины на текущий берег
                 //parom->FinishUnloading();
-
-                parom->isLeftSide = !parom->isLeftSide; // инверсия стороны после выгрузки
+                //parom->isLeftSide = !parom->isLeftSide; // инверсия стороны после выгрузки
             }
 
         }
-
-        void UnloadCars()
-        {
-            // Получаем список машин на пароме
-            List<Control^>^ onboardCars = parom->Onboard();
-
-            // Вспомогательный список для новых машин в очереди
-            List<Car^>^ targetList = parom->isLeftSide ? rightCars : leftCars;
-            int queueY = parom->isLeftSide ? RIGHT_QUEUE_Y : LEFT_QUEUE_Y;
-            int startX = parom->isLeftSide ? FERRY_LEFT_X + FERRY_W + 50 : FERRY_RIGHT_X - 50;
-
-            for each (Control ^ carSprite in onboardCars)
-            {
-                // Перемещаем спрайт на форму
-                carSprite->Parent = this->groupBox1;
-
-                // Позиционируем спрайт на берегу
-                carSprite->Top = queueY - carSprite->Height / 2;
-
-                if (parom->isLeftSide)
-                    carSprite->Left = startX;   // левый берег — машины поехали вправо
-                else
-                    carSprite->Left = startX;   // правый берег — машины поехали влево
-
-                // Находим объект Car, которому принадлежит этот спрайт
-                Car^ foundCar = nullptr;
-                for each (Car ^ c in leftCars)
-                {
-                    if (c->Sprite == carSprite) { foundCar = c; leftCars->Remove(c); break; }
-                }
-                if (!foundCar)
-                {
-                    for each (Car ^ c in rightCars)
-                    {
-                        if (c->Sprite == carSprite) { foundCar = c; rightCars->Remove(c); break; }
-                    }
-                }
-
-                // Если нашли объект Car, добавляем его в очередь нового берега
-                if (foundCar)
-                    targetList->Add(foundCar);
-            }
-
-            // Очищаем паром
-            onboardCars->Clear();
-        }
-
 
         Void OnCarLoadingProgress(System::Object^ sender, System::EventArgs^ e)
         {
             // обновляем счётчик ровно в момент заезда
             CounterLabel->Text = System::String::Format("{0}/6", parom->UsedSlots);
         }
-
-        // (пока пусто — в следующих шагах)
-        void OnLeftLoadAllowed() {}
-        void OnRightLoadAllowed() {}
-        void OnUnloadStart() {}
 
         void OnSpeedChanged(Object^ sender, EventArgs^ e) {
             UpdateSpeed(trackBar1->Value);
@@ -474,10 +390,6 @@ namespace Project13 {
             this->groupBox1->Controls->Add(guardRight->Sprite);
 
             SetupEventHandlers();
-
-            guardLeft->OnLoadAllowed += gcnew GuardEventHandler(this, &MyForm::OnLeftLoadAllowed);
-            guardRight->OnLoadAllowed += gcnew GuardEventHandler(this, &MyForm::OnRightLoadAllowed);
-            parom->OnUnloadStart += gcnew SimpleEventHandler(this, &MyForm::OnUnloadStart);
 
             // Таймер «мира» — для плавного движения лучше 16..33 мс
             checkParomTimer = gcnew Timer();

@@ -32,18 +32,9 @@ public:
     property PictureBox^ Sprite{ PictureBox ^ get() { return sprite; } }
     property String^ Name{ String ^ get() { return name; } }
     property String^ Role{ String ^ get() { return role; } }
-
-    void SmoothMoveTo(Point target, int moveSpeed);  // основная
 };
 
-inline void Human::SmoothMoveTo(Point target, int moveSpeed)
-{
-    if (sprite == nullptr) return;
-    int dx = (target.X > sprite->Left) ? moveSpeed : (target.X < sprite->Left ? -moveSpeed : 0);
-    int dy = (target.Y > sprite->Top) ? moveSpeed : (target.Y < sprite->Top ? -moveSpeed : 0);
-    sprite->Left += dx;
-    sprite->Top += dy;
-}
+
 
 // ===== Охранник =====
 public ref class SecurityGuard : public Human
@@ -53,12 +44,8 @@ private:
     bool queueDetected;
 
 public:
-    // ДОБАВЛЯЕМ обратно старое событие для совместимости
-    event GuardEventHandler^ OnLoadAllowed;
-
     // И новые события
     event EventHandler^ OnQueueReady;
-    event EventHandler^ OnQueueEmpty;
 
     SecurityGuard(String^ imagePath) : Human("Охранник", "SecurityGuard", imagePath), guardTimer(gcnew Timer()), queueDetected(false)
     {
@@ -70,8 +57,6 @@ public:
     void OnGuardTick(Object^ sender, EventArgs^ e) {}
 
     // Метод для проверки очереди
-    // если пустая - генерируем событие OnQueueEmpty;
-    // если машина не у шлагбаума, но загрузка запущена - генерируем событие OnQueueEmpty;
     // если машина у шлагбаума, но загрузка не запущена - генерируем событие OnQueueReady;
     void CheckQueue(List<Car^>^ cars, int queueX, int queueY, bool isLeftSide)
     {
@@ -80,7 +65,6 @@ public:
             if (queueDetected)
             {
                 queueDetected = false;
-                OnQueueEmpty(this, EventArgs::Empty);
             }
             return;
         }
@@ -96,15 +80,12 @@ public:
 
         bool firstCarAtGate = (Math::Abs(carFrontX - queueX) <= 20) && (Math::Abs(firstCar->Sprite->Top - queueY) <= 15);
 
-        // bool firstCarAtGate = (Math::Abs(firstCar->Sprite->Left - queueX) <= 10) && (Math::Abs(firstCar->Sprite->Top - queueY) <= 10);
-
         if (firstCarAtGate) {
             if (!queueDetected) queueDetected = true;
             OnQueueReady(this, EventArgs::Empty);
         }
         else if (!firstCarAtGate) {
             if (queueDetected) queueDetected = false;
-            OnQueueEmpty(this, EventArgs::Empty);
         }
     }
 };
