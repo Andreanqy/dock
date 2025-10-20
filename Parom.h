@@ -50,6 +50,7 @@ public:
 public:
     Parom(PictureBox^ spriteParom, int capacityInSlots) : sprite(spriteParom), capacitySlots(capacityInSlots), usedSlots(0), currentState(ParomState::Waiting), visible_(true), isLeftSide(true), loadingQueue(gcnew List<Car^>()), currentMovingCar(nullptr)
     {
+        capacityInSlots = 3;
         unloadingQueue = gcnew List<Car^>();
 
         if (sprite == nullptr) throw gcnew ArgumentNullException("spriteParom");
@@ -169,13 +170,13 @@ public:
         bool reachedY = currentMovingCar->MoveToY(targetPositionOnFerry.Y);
 
         if (reachedX && reachedY) {
-            // переносим внутрь парома
-            Point local(targetPositionOnFerry.X - sprite->Left, targetPositionOnFerry.Y - sprite->Top);
+            // переносим к месту парома для будущей разгрузки
+            Point local(isLeftSide ? 600 : 465, isLeftSide ? 190 : 450); // 600 : 0 и 190 : 0
             //currentMovingCar->Sprite->Parent = sprite;
             currentMovingCar->Sprite->Location = local;
 
             // машина на палубе не видна (паром визуально без изменений)
-            currentMovingCar->Sprite->Visible = false; // Потом изменить на true и доделать логику
+            currentMovingCar->Sprite->Visible = false;
 
             // учитываем на борту ТЕПЕРЬ, после фактического въезда
             usedSlots += currentMovingCar->Slots;
@@ -264,8 +265,8 @@ public:
     {
         currentMovingCar = car;
 
-        int targetX = isLeftSide ? -100 : 1300;
-        int targetY = sprite->Top + sprite->Height / 2 - car->Sprite->Height / 2; // Потом поменять на значение пониже (чтобы ехал не по середине дороги)
+        int targetX = isLeftSide ? 1300 : -200;
+        int targetY = isLeftSide ? 190 : 450;
 
         targetPositionOnShore = Point(targetX, targetY);
 

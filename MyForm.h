@@ -18,7 +18,7 @@ namespace Project13 {
         // ===================== НАСТРОЙКИ СЦЕНЫ =====================
         // Стартовые точки спавна (из "углов" дорог)
         literal int LEFT_SPAWN_X_START = 0;
-        literal int LEFT_SPAWN_Y = 470;
+        literal int LEFT_SPAWN_Y = 530;
         literal int RIGHT_SPAWN_X_START = 1300;
         literal int RIGHT_SPAWN_Y = 150;
 
@@ -319,7 +319,7 @@ namespace Project13 {
         Void OnCarLoadingProgress(System::Object^ sender, System::EventArgs^ e)
         {
             // обновляем счётчик ровно в момент заезда
-            CounterLabel->Text = System::String::Format("{0}/6", parom->UsedSlots);
+            CounterLabel->Text = System::String::Format("{0}/3", parom->UsedSlots);
         }
 
         void OnSpeedChanged(Object^ sender, EventArgs^ e) {
@@ -372,7 +372,7 @@ namespace Project13 {
             else { paromSprite->BackColor = Color::SaddleBrown; paromSprite->BorderStyle = BorderStyle::FixedSingle; }
 
             this->groupBox1->Controls->Add(paromSprite);
-            parom = gcnew CarsParom(paromSprite, 6);
+            parom = gcnew CarsParom(paromSprite, 3);
 
             // Охранники (координаты/размер — подберите сами)
             guardLeft = gcnew SecurityGuard(SpritePath("guard.png"));
@@ -471,7 +471,7 @@ namespace Project13 {
                this->CounterLabel->Name = L"CounterLabel";
                this->CounterLabel->Size = System::Drawing::Size(46, 29);
                this->CounterLabel->TabIndex = 9;
-               this->CounterLabel->Text = L"0/6";
+               this->CounterLabel->Text = L"0/3";
                // 
                // trackBar1
                // 

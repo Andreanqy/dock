@@ -80,7 +80,7 @@ public:
 
         bool firstCarAtGate = (Math::Abs(carFrontX - queueX) <= 20) && (Math::Abs(firstCar->Sprite->Top - queueY) <= 15);
 
-        if (firstCarAtGate) {
+        if (firstCarAtGate && ((queueX < 500 && isLeftSide) || (queueX > 500 && !isLeftSide))) {
             if (!queueDetected) queueDetected = true;
             OnQueueReady(this, EventArgs::Empty);
         }
