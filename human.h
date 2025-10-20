@@ -89,30 +89,21 @@ public:
         Car^ firstCar = cars[0];
         int carFrontX;
 
-        // если машины сто€т слева и движутс€ вправо Ч "перед" у машины справа
-        if (role == "SecurityGuard" && name == "ќхранник") {
-            // определ€ем по Y Ч нижн€€ дорога (слева)
-            bool isLeftQueue = (queueY > 300); // подстрой под реальную ось
-            if (isLeftQueue)
-                carFrontX = firstCar->Sprite->Left + firstCar->Sprite->Width; // перед справа
-            else
-                carFrontX = firstCar->Sprite->Left; // перед слева
-        }
-        else {
-            throw "–аботает не охранник!";
-            //carFrontX = firstCar->Sprite->Left + firstCar->Sprite->Width; // fallback
-        }
+        // определ€ем по Y Ч нижн€€ дорога (слева)
+        bool isLeftQueue = (queueY > 300); // подстрой под реальную ось
+        if (isLeftQueue) carFrontX = firstCar->Sprite->Left + firstCar->Sprite->Width; // перед справа
+        else carFrontX = firstCar->Sprite->Left; // перед слева
 
         bool firstCarAtGate = (Math::Abs(carFrontX - queueX) <= 20) && (Math::Abs(firstCar->Sprite->Top - queueY) <= 15);
 
         // bool firstCarAtGate = (Math::Abs(firstCar->Sprite->Left - queueX) <= 10) && (Math::Abs(firstCar->Sprite->Top - queueY) <= 10);
 
-        if (firstCarAtGate && !queueDetected && ((queueX < 600 && isLeftSide) || (queueX > 600 && !isLeftSide))) {
-            queueDetected = true;
+        if (firstCarAtGate) {
+            if (!queueDetected) queueDetected = true;
             OnQueueReady(this, EventArgs::Empty);
         }
-        else if (!firstCarAtGate && queueDetected) {
-            queueDetected = false;
+        else if (!firstCarAtGate) {
+            if (queueDetected) queueDetected = false;
             OnQueueEmpty(this, EventArgs::Empty);
         }
     }

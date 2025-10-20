@@ -24,7 +24,10 @@ private:
     // ДЛЯ АСИНХРОННОЙ ЗАГРУЗКИ
     Timer^ loadingTimer;
     List<Car^>^ loadingQueue;
-    // Timer^ unloadTimer;
+
+    // ДЛЯ АСИНХРОННОЙ РАЗГРУЗКИ
+    Timer^ unloadingTimer;
+    List<Car^>^ unloadingQueue;
 
     // Для анимации заезда
     Timer^ carMovementTimer;
@@ -36,7 +39,6 @@ public:
 
     // События
     event SimpleEventHandler^ OnUnloadStart;
-    event SimpleEventHandler^ OnLoadingStarted;
     event SimpleEventHandler^ OnLoadingFinished; 
     event SimpleEventHandler^ OnUnloadingFinished;
     event ParomStateEventHandler^ OnParomStateChanged;
@@ -47,6 +49,8 @@ public:
 public:
     Parom(PictureBox^ spriteParom, int capacityInSlots) : sprite(spriteParom), onboard(gcnew List<Control^>()), capacitySlots(capacityInSlots), usedSlots(0), currentState(ParomState::Waiting), visible_(true), isLeftSide(true), loadingQueue(gcnew List<Car^>()), currentMovingCar(nullptr)
     {
+        unloadingQueue = gcnew List<Car^>();
+
         if (sprite == nullptr) throw gcnew ArgumentNullException("spriteParom");
         sprite->Visible = true;
 
@@ -54,6 +58,11 @@ public:
         loadingTimer = gcnew Timer();
         loadingTimer->Interval = 100; // 100мс между машинами
         loadingTimer->Tick += gcnew EventHandler(this, &Parom::OnLoadingTick);
+
+        // Инициализация таймера разгрузки
+        unloadingTimer = gcnew Timer();
+        unloadingTimer->Interval = 100; // 100мс между машинами
+        unloadingTimer->Tick += gcnew EventHandler(this, &Parom::OnUnloadingTick);
 
         // Инициализация таймера анимации машин
         carMovementTimer = gcnew Timer();
@@ -87,7 +96,6 @@ public:
         currentState = ParomState::Loading;
         loadingQueue = carsToLoad;
 
-        OnLoadingStarted();
         OnParomStateChanged(this);
         loadingTimer->Start();
     }
@@ -129,6 +137,7 @@ public:
         StartCarLoadingAnimation(currentCar);
 
         // Удаляем из очереди — теперь эта машина считается в процессе загрузки
+        unloadingQueue->Add(loadingQueue[0]);
         loadingQueue->RemoveAt(0);
 
         // Следующую возьмём после завершения анимации текущей
@@ -164,14 +173,23 @@ public:
         }
     }
 
-    // Начать выгрузку
-    void StartUnloading()
+
+
+
+    // Начать асинхронную разгрузку
+    void StartAsyncUnloading()
     {
+        if (currentState != ParomState::MovingToDest) {
+            return;
+        }
+
         currentState = ParomState::Unloading;
-        OnUnloadStart();
+
         OnParomStateChanged(this);
+        //unloadingTimer->Start();
     }
 
+    /*
     // Завершение выгрузки
     void FinishUnloading()
     {
@@ -181,6 +199,64 @@ public:
         OnUnloadingFinished();
         OnParomStateChanged(this);
     }
+    */
+
+    // Обработчик тика загрузки
+    void OnUnloadingTick(Object^ sender, EventArgs^ e)
+    {
+        // Если уже кто-то выезжает – ждём завершения
+        if (currentMovingCar != nullptr)
+            return;
+
+        if (unloadingQueue->Count == 0 || IsEmpty)
+        {
+            CheckUnloadingCompletion();
+            return;
+        }
+
+        Car^ currentCar = unloadingQueue[0];
+
+        // Запускаем анимацию выезда (без мгновенного добавления на берег)
+        //StartCarUnloadingAnimation(currentCar);
+
+        // Удаляем из очереди — теперь эта машина считается в процессе загрузки
+        unloadingQueue->RemoveAt(0);
+
+        // Следующую возьмём после завершения анимации текущей
+        CheckUnloadingCompletion();
+    }
+
+    // Проверка условий завершения загрузки
+    void CheckUnloadingCompletion()
+    {
+        // Если палуба пустая — завершаем загрузку и отплываем
+        if (IsEmpty)
+        {
+            Console::WriteLine("Паром полностью пуст, можно загружать!");
+            State = ParomState::Waiting;
+            unloadingQueue->Clear();
+            OnLoadingFinished();
+            OnParomStateChanged(this);
+            return;
+        }
+
+        // Если очередь пустая — просто ждём
+        if (loadingQueue == nullptr || loadingQueue->Count == 0)
+        {
+            Console::WriteLine("Очередь пуста, ждем пополнения.");
+            return;
+        }
+
+        // Если очередь есть, продолжаем загружать
+        if (currentMovingCar == nullptr)
+        {
+            // берём следующую
+            OnLoadingTick(nullptr, nullptr);
+        }
+    }
+
+
+
 
     // Проверка возможности загрузки с берега
     bool CanLoadFromShore(bool shoreIsLeft)

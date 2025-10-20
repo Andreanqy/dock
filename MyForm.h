@@ -221,7 +221,7 @@ namespace Project13 {
 
         void OnLeftQueueReady(Object^ sender, EventArgs^ e)
         {
-            if (parom->CanLoadFromShore(true) && parom->isLeftSide) parom->StartAsyncLoading(leftCars);
+            if (parom->CanLoadFromShore(true)) parom->StartAsyncLoading(leftCars);
         }
 
         void OnRightQueueReady(Object^ sender, EventArgs^ e)
@@ -257,6 +257,8 @@ namespace Project13 {
                 StartParomMovement();
                 break;
             case Parom::ParomState::Unloading:
+                // Запускаем анимацию разгрузки парома
+                // StartParomUnloading();
                 break;
             case Parom::ParomState::Loading:
                 break;
@@ -336,11 +338,11 @@ namespace Project13 {
                 paromMovementTimer->Stop();
 
                 // НАЧИНАЕМ ВЫГРУЗКУ
-                parom->StartUnloading();
-                UnloadCars();          // выгружаем машины на текущий берег
-                parom->FinishUnloading();
+                parom->StartAsyncUnloading();
+                //UnloadCars();          // выгружаем машины на текущий берег
+                //parom->FinishUnloading();
 
-                parom->isLeftSide = !parom->isLeftSide; // инверсия стороны после выгрузки
+                //parom->isLeftSide = !parom->isLeftSide; // инверсия стороны после выгрузки
             }
 
         }
