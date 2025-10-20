@@ -8,10 +8,10 @@ public ref class Car
 {
 protected:
     PictureBox^ sprite;   // визуальный спрайт
-    int speed;            // пикселей за тик (всегда >0)
     int slots;            // "вес" машины во вместимости парома (легк.=1, груз.=2)
 
 public:
+    int speed;            // пикселей за тик (всегда >0)
     Car(int speedPxPerTick, int capacitySlots) : speed(speedPxPerTick), slots(capacitySlots)
     {
         if (speed <= 0) speed = 1;  // защита от нулевой скорости

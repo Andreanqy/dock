@@ -52,21 +52,20 @@ namespace Project13 {
         // ========================================================================
 
         // Поля сцены
-        List<Car^>^ leftCars;
-        List<Car^>^ rightCars;
+        System::Collections::Generic::List<Car^>^ leftCars;
+        System::Collections::Generic::List<Car^>^ rightCars;
 
         SecurityGuard^ guardLeft;
         SecurityGuard^ guardRight;
 
-        PictureBox^ paromSprite;
+        System::Windows::Forms::PictureBox^ paromSprite;
 
-        Timer^ checkParomTimer; // тиканьё «мира»
+        System::Windows::Forms::Timer^ checkParomTimer; // тиканьё «мира»
 
         // Добавляем поля для движения парома
-        Timer^ paromMovementTimer;
+        System::Windows::Forms::Timer^ paromMovementTimer;
         int paromTargetX;
         int paromTargetY;
-        int paromStep;
     public: static CarsParom^ parom;
     private: System::Windows::Forms::Label^ CounterLabel;
     private: System::Windows::Forms::TrackBar^ trackBar1;
@@ -90,26 +89,26 @@ namespace Project13 {
         }
 
         // Устанавливаем изображение
-        void SetSpriteImage(PictureBox^ pb, System::String^ file, bool faceRight, int w, int h, Color fallbackColor)
+        void SetSpriteImage(System::Windows::Forms::PictureBox^ pb, System::String^ file, bool faceRight, int w, int h, System::Drawing::Color fallbackColor)
         {
             auto p = SpritePath(file);
             if (p != nullptr)
             {
-                auto img = Image::FromFile(p);
-                if (faceRight) img->RotateFlip(RotateFlipType::RotateNoneFlipX);
+                auto img = System::Drawing::Image::FromFile(p);
+                if (faceRight) img->RotateFlip(System::Drawing::RotateFlipType::RotateNoneFlipX);
                 pb->Image = img;
-                pb->BackColor = Color::Transparent;
-                pb->SizeMode = PictureBoxSizeMode::StretchImage;
+                pb->BackColor = System::Drawing::Color::Transparent;
+                pb->SizeMode = System::Windows::Forms::PictureBoxSizeMode::StretchImage;
             }
-            else throw String::Format("Файл {file} не найден!");
+            else throw System::String::Format("Файл {file} не найден!");
             pb->Width = w; pb->Height = h;
         }
 
         // ------------------ Добавление транспорта ------------------
-        void AddPassLeft(Object^, EventArgs^) {
+        void AddPassLeft(System::Object^, System::EventArgs^) {
             auto car = gcnew Passcar();
             System::String^ file = (rng->Next(2) == 0) ? "GreenCar.png" : "RedCar.png";
-            SetSpriteImage(car->Sprite, file, true, PASS_W, PASS_H, Color::Yellow);
+            SetSpriteImage(car->Sprite, file, true, PASS_W, PASS_H, System::Drawing::Color::Yellow);
 
             // спавним из "левого угла"
             car->Sprite->Left = LEFT_SPAWN_X_START - car->Sprite->Width;
@@ -120,9 +119,9 @@ namespace Project13 {
             car->Sprite->BringToFront();
         }
 
-        void AddTruckLeft(Object^, EventArgs^) {
+        void AddTruckLeft(System::Object^, System::EventArgs^) {
             auto car = gcnew Truck();
-            SetSpriteImage(car->Sprite, "Truck.png", true, TRUCK_W, TRUCK_H, Color::Orange);
+            SetSpriteImage(car->Sprite, "Truck.png", true, TRUCK_W, TRUCK_H, System::Drawing::Color::Orange);
 
             car->Sprite->Left = LEFT_SPAWN_X_START - car->Sprite->Width;
             car->Sprite->Top = LEFT_SPAWN_Y - car->Sprite->Height / 2;
@@ -132,10 +131,10 @@ namespace Project13 {
             car->Sprite->BringToFront();
         }
 
-        void AddPassRight(Object^, EventArgs^) {
+        void AddPassRight(System::Object^, System::EventArgs^) {
             auto car = gcnew Passcar();
             System::String^ file = (rng->Next(2) == 0) ? "GreenCar.png" : "RedCar.png";
-            SetSpriteImage(car->Sprite, file, false, PASS_W, PASS_H, Color::Yellow);
+            SetSpriteImage(car->Sprite, file, false, PASS_W, PASS_H, System::Drawing::Color::Yellow);
 
             // спавним из "правого угла"
             car->Sprite->Left = RIGHT_SPAWN_X_START;
@@ -146,9 +145,9 @@ namespace Project13 {
             car->Sprite->BringToFront();
         }
 
-        void AddTruckRight(Object^, EventArgs^) {
+        void AddTruckRight(System::Object^, System::EventArgs^) {
             auto car = gcnew Truck();
-            SetSpriteImage(car->Sprite, "Truck.png", /*faceRight=*/false, TRUCK_W, TRUCK_H, Color::Orange);
+            SetSpriteImage(car->Sprite, "Truck.png", /*faceRight=*/false, TRUCK_W, TRUCK_H, System::Drawing::Color::Orange);
 
             car->Sprite->Left = RIGHT_SPAWN_X_START;
             car->Sprite->Top = RIGHT_SPAWN_Y - car->Sprite->Height / 2;
@@ -218,12 +217,12 @@ namespace Project13 {
             guardRight->CheckQueue(rightCars, RIGHT_QUEUE_X, RIGHT_QUEUE_Y - PASS_H / 2, parom->isLeftSide);
         }
 
-        void OnLeftQueueReady(Object^ sender, EventArgs^ e)
+        void OnLeftQueueReady(System::Object^ sender, System::EventArgs^ e)
         {
             if (parom->CanLoadFromShore(true)) parom->StartAsyncLoading(leftCars);
         }
 
-        void OnRightQueueReady(Object^ sender, EventArgs^ e)
+        void OnRightQueueReady(System::Object^ sender, System::EventArgs^ e)
         {
             if (parom->CanLoadFromShore(false)) parom->StartAsyncLoading(rightCars);
         }
@@ -260,7 +259,6 @@ namespace Project13 {
 
             paromMovementTimer = gcnew Timer();
             paromMovementTimer->Interval = 30; // Быстрее для тестирования
-            paromStep = 15;
             paromTargetX = parom->isLeftSide ? FERRY_RIGHT_X : FERRY_LEFT_X;
             paromTargetY = parom->isLeftSide ? FERRY_RIGHT_Y : FERRY_LEFT_Y;
 
@@ -271,7 +269,7 @@ namespace Project13 {
             paromMovementTimer->Start();
         }
 
-        void OnParomMovementTick(Object^ sender, EventArgs^ e)
+        void OnParomMovementTick(System::Object^ sender, System::EventArgs^ e)
         {
             int currentX = parom->Sprite->Left;
             int currentY = parom->Sprite->Top;
@@ -279,8 +277,8 @@ namespace Project13 {
             int dirX = (paromTargetX > currentX) ? 1 : -1;
             int dirY = (paromTargetY > currentY) ? 1 : -1;
 
-            int newX = currentX + paromStep * dirX;
-            int newY = currentY + paromStep * dirY;
+            int newX = currentX + parom->speed * dirX;
+            int newY = currentY + parom->speed* dirY;
 
             // Проверяем, не перескочили ли цель
             if ((dirX > 0 && newX >= paromTargetX) || (dirX < 0 && newX <= paromTargetX)) newX = paromTargetX;
@@ -290,17 +288,17 @@ namespace Project13 {
             double dy = paromTargetY - currentY;
             double dist = Math::Sqrt(dx * dx + dy * dy);
 
-            if (dist < paromStep) {
+            if (dist < parom->speed) {
                 parom->Sprite->Left = paromTargetX;
                 parom->Sprite->Top = paromTargetY;
             }
             else {
-                parom->Sprite->Left = currentX + (int)(paromStep * dx / dist);
-                parom->Sprite->Top = currentY + (int)(paromStep * dy / dist);
+                parom->Sprite->Left = currentX + (int)(parom->speed * dx / dist);
+                parom->Sprite->Top = currentY + (int)(parom->speed * dy / dist);
             }
 
             // Отладочный вывод
-            Console::WriteLine("Паром движется: {0} -> {1} (цель: {2})",
+            System::Console::WriteLine("Паром движется: {0} -> {1} (цель: {2})",
                 currentX, newX, paromTargetX);
 
             if (newX == paromTargetX && newY == paromTargetY) {
@@ -322,33 +320,17 @@ namespace Project13 {
             CounterLabel->Text = System::String::Format("{0}/3", parom->UsedSlots);
         }
 
-        void OnSpeedChanged(Object^ sender, EventArgs^ e) {
+        void OnSpeedChanged(System::Object^ sender, System::EventArgs^ e) {
             UpdateSpeed(trackBar1->Value);
         }
 
         void UpdateSpeed(int speedLevel) {
             // Преобразуем уровень в множитель скорости
-            double speedMultiplier;
-
-            switch (speedLevel) {
-            case 1:
-                speedMultiplier = 0.5;
-                break;
-            case 2:
-                speedMultiplier = 1.0;
-                break;
-            case 3:
-                speedMultiplier = 1.5;
-                break;
-            default:
-                speedMultiplier = 1.0;
-                break;
-            }
-
-            // Меняем только интервал таймера, НЕ трогаем CounterLabel
-            checkParomTimer->Interval = (int)(30 / speedMultiplier);
-
-            // CounterLabel остаётся неизменным - он только для счётчика парома
+            for each (Car ^ c in leftCars)
+                c->speed *= (5 / trackBar1->Value);
+            for each (Car ^ c in rightCars)
+                c->speed *= (5 / trackBar1->Value);
+            parom->speed *= (15 / trackBar1->Value);
         }
 
     public:
@@ -357,19 +339,19 @@ namespace Project13 {
             InitializeComponent();
 
             rng = gcnew System::Random();
-            leftCars = gcnew List<Car^>();
-            rightCars = gcnew List<Car^>();
+            leftCars = gcnew System::Collections::Generic::List<Car^>();
+            rightCars = gcnew System::Collections::Generic::List<Car^>();
 
             // Паром
-            paromSprite = gcnew PictureBox();
-            paromSprite->SizeMode = PictureBoxSizeMode::StretchImage;
+            paromSprite = gcnew System::Windows::Forms::PictureBox();
+            paromSprite->SizeMode = System::Windows::Forms::PictureBoxSizeMode::StretchImage;
             paromSprite->Width = FERRY_W; paromSprite->Height = FERRY_H;
             paromSprite->Left = FERRY_LEFT_X;
             paromSprite->Top = FERRY_LEFT_Y;
 
             auto pf = SpritePath("ParomForCars.png");
             if (pf != nullptr) paromSprite->ImageLocation = pf;
-            else { paromSprite->BackColor = Color::SaddleBrown; paromSprite->BorderStyle = BorderStyle::FixedSingle; }
+            else { paromSprite->BackColor = System::Drawing::Color::SaddleBrown; paromSprite->BorderStyle = System::Windows::Forms::BorderStyle::FixedSingle; }
 
             this->groupBox1->Controls->Add(paromSprite);
             parom = gcnew CarsParom(paromSprite, 3);
@@ -382,8 +364,8 @@ namespace Project13 {
             guardLeft->Sprite->Left = 365;   guardLeft->Sprite->Top = 551;
             guardRight->Sprite->Left = 884;  guardRight->Sprite->Top = 118;
 
-            guardLeft->Sprite->SizeMode = PictureBoxSizeMode::StretchImage;
-            guardRight->Sprite->SizeMode = PictureBoxSizeMode::StretchImage;
+            guardLeft->Sprite->SizeMode = System::Windows::Forms::PictureBoxSizeMode::StretchImage;
+            guardRight->Sprite->SizeMode = System::Windows::Forms::PictureBoxSizeMode::StretchImage;
             guardLeft->Sprite->Width = 16;   guardLeft->Sprite->Height = 16;   // ПРАВЬТЕ
             guardRight->Sprite->Width = 16;  guardRight->Sprite->Height = 16;  // ПРАВЬТЕ
 
@@ -401,8 +383,8 @@ namespace Project13 {
             // ========== НАСТРОЙКА TRACKBAR ==========
 
             trackBar1->Minimum = 1;
-            trackBar1->Maximum = 3;    // 3 уровня скорости
-            trackBar1->Value = 2;      // 1x (нормальная скорость)
+            trackBar1->Maximum = 10;    // 10 уровней скорости
+            trackBar1->Value = 5;      // 1x (нормальная скорость)
             trackBar1->SmallChange = 1;
             trackBar1->LargeChange = 1;
             trackBar1->TickStyle = TickStyle::BottomRight;

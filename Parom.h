@@ -12,6 +12,7 @@ public ref class Parom
 {
 public:
     enum class ParomState { Waiting, Loading, MovingToDest, Unloading };
+    int speed;
 
 private:
     PictureBox^ sprite;
@@ -48,7 +49,7 @@ public:
     event EventHandler^ OnCarLoadingProgress;
 
 public:
-    Parom(PictureBox^ spriteParom, int capacityInSlots) : sprite(spriteParom), capacitySlots(capacityInSlots), usedSlots(0), currentState(ParomState::Waiting), visible_(true), isLeftSide(true), loadingQueue(gcnew List<Car^>()), currentMovingCar(nullptr)
+    Parom(PictureBox^ spriteParom, int capacityInSlots) : sprite(spriteParom), capacitySlots(capacityInSlots), speed(15), usedSlots(0), currentState(ParomState::Waiting), visible_(true), isLeftSide(true), loadingQueue(gcnew List<Car^>()), currentMovingCar(nullptr)
     {
         capacityInSlots = 3;
         unloadingQueue = gcnew List<Car^>();
