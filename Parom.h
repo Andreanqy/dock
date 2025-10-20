@@ -200,6 +200,7 @@ public:
             State = ParomState::MovingToDest;
             loadingQueue->Clear();
             OnParomStateChanged(this);
+            loadingTimer->Stop();
             return;
         }
 
